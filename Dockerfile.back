@@ -1,0 +1,36 @@
+# Base image
+FROM node:16-alpine
+
+# Set working directory
+WORKDIR /site
+
+# Download JS-DOS files
+RUN wget https://js-dos.com/6.22/current/js-dos.js && \
+    wget https://js-dos.com/6.22/current/wdosbox.js && \
+    wget https://js-dos.com/6.22/current/wdosbox.wasm.js
+
+# Install serve
+RUN npm install -g serve
+
+# Download game files
+ARG GAME_URL=https://archive.org/download/2020_03_22_DOOM/DOOM%20WADs/Doom%20(v1.9).zip
+RUN wget -O game.zip $GAME_URL
+
+# Download Crispy Doom executable
+RUN wget http://latest.chocolate-doom.org/crispy/crispy-doom-20231013-win32.zip -O crispy-doom.zip && \
+    unzip crispy-doom.zip && \
+    mv crispy-doom-20231013-win32 crispy-doom
+
+# Copy the executable into the working directory
+COPY crispy-doom/crispy-doom.exe /site
+
+# Copy HTML file
+COPY index.html .
+
+# Replace GAME_ARGS in HTML
+ARG GAME_ARGS="crispy-doom.exe"
+RUN sed -i s/GAME_ARGS/$GAME_ARGS/ index.html
+
+# Set entrypoint
+ENTRYPOINT npx serve -l tcp://0.0.0.0:8000
+
