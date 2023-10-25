@@ -1,0 +1,33 @@
+# Base image
+FROM node:16-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Download JS-DOS files
+RUN wget https://js-dos.com/6.22/current/js-dos.js && \
+    wget https://js-dos.com/6.22/current/wdosbox.js && \
+    wget https://js-dos.com/6.22/current/wdosbox.wasm.js
+
+# Download emulators-ui.js
+RUN wget -O /app/emulators-ui.js https://raw.githubusercontent.com/Elpatoranceo/js-dos-emulators-ui/main/emulators-ui.js
+
+# Install serve
+RUN npm install -g serve
+
+# Copy game files from local directory
+COPY "Doom_v1.9.zip" /app/game.zip
+
+# Copy HTML and other required files
+COPY index.html /app
+COPY js-dos.css /app
+COPY emulators-ui.js /app
+COPY emulators-ui.css /app
+
+# Replace GAME_ARGS in HTML
+ARG GAME_ARGS="doom.exe"
+RUN sed -i s/GAME_ARGS/$GAME_ARGS/ index.html
+
+# Set entrypoint
+ENTRYPOINT ["serve", "-s", ".", "-l", "8000"]
+
